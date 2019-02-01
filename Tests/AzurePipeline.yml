@@ -1,16 +1,15 @@
 resources:
 - repo: self
 variables:
-  resourcegroupname: 'sampleresourcegroup'
   adminUsername: 'testuser'
   agentCount: '4'
   agentNamePrefix: 'agent'
-phases:
-- phase: Phase_1
+jobs:
+- job: Phase_1
   displayName: Provision machines and copy binaries
 
   condition: succeeded()
-  queue:
+  pool:
     name: Hosted VS2017
     demands: 
     - msbuild
@@ -36,7 +35,6 @@ phases:
 
       csmParametersFileLink: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/101-vm-simple-windows/azuredeploy.parameters.json'
 
-      overrideParameters: '-adminUsername $(adminUsername) -adminPassword $(adminPwd) -dnsLabelPrefix testsampleprefix'
 
       enableDeploymentPrerequisites: ConfigureVMwithWinRM
 
@@ -111,16 +109,15 @@ phases:
       ScriptArguments: '-VSTSAccount kavipriyaa -PersonalAccessToken $(pat) -AgentName $(agentNamePrefix) -PoolName testpool -AgentCount $(agentCount) -AdminUser kavipriya.a@outlook.com'
 
 
-- phase: Phase_2
+- job: Phase_2
   displayName: Run tests
-
-  dependsOn: Phase_1
-  condition: succeeded()
-  queue:
-    name: testpool
   strategy:
     parallel: 4
-    maxParallel: 4
+  dependsOn: Phase_1
+  condition: succeeded()
+  pool:
+    name: testpool
+
   steps:
   - task: VisualStudioTestPlatformInstaller@1
     displayName: 'Visual Studio Test Platform Installer'
@@ -139,12 +136,12 @@ phases:
 
 
 
-- phase: Phase_3
+- job: Phase_3
   displayName: Delete machines
 
   dependsOn: Phase_2
   condition: succeededOrFailed()
-  queue:
+  pool:
     name: Hosted VS2017
 
   steps:
