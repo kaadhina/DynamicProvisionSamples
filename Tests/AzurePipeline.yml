@@ -1,0 +1,203 @@
+resources:
+- repo: self
+phases:
+- phase: Phase_1
+  displayName: Provision machines and copy binaries
+
+  condition: succeeded()
+  queue:
+    name: Hosted VS2017
+    demands: 
+   - msbuild
+   - visualstudio
+   - azureps
+
+#Your build pipeline references a secret variable named ‘adminPwd’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it secret. See https://go.microsoft.com/fwlink/?linkid=865972
+#Your build pipeline references a secret variable named ‘adminPwd’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it secret. See https://go.microsoft.com/fwlink/?linkid=865972
+#Your build pipeline references a secret variable named ‘adminPwd’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it secret. See https://go.microsoft.com/fwlink/?linkid=865972
+#Your build pipeline references an undefined variable named ‘testvms’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab. See https://go.microsoft.com/fwlink/?linkid=865972
+#Your build pipeline references a secret variable named ‘adminPwd’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it secret. See https://go.microsoft.com/fwlink/?linkid=865972
+#Your build pipeline references a secret variable named ‘pat’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it secret. See https://go.microsoft.com/fwlink/?linkid=865972
+  variables:
+    resourcegroupname: 'sampleresourcegroup'
+    adminUsername: 'testuser'
+  steps:
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Create machines'
+    inputs:
+      azureSubscription: 'Visual Studio Ultimate with MSDN (2d0abf9b-717a-4ade-83ef-ddffa31b578b)'
+
+      resourceGroupName: '$(resourcegroupname)'
+
+      location: 'Southeast Asia'
+
+      templateLocation: 'URL of the file'
+
+      csmFileLink: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/101-vm-simple-windows/azuredeploy.json'
+
+      csmParametersFileLink: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/101-vm-simple-windows/azuredeploy.parameters.json'
+
+      overrideParameters: '-adminUsername $(adminUsername) -adminPassword $(adminPwd) -dnsLabelPrefix testsampleprefix'
+
+      enableDeploymentPrerequisites: ConfigureVMwithWinRM
+
+      outputVariable: testvms
+
+
+  - task: NuGetCommand@2
+    displayName: 'NuGet restore'
+
+
+  - task: VSBuild@1
+    displayName: 'Build solution **\*.sln'
+
+
+  - task: AzureFileCopy@3
+    displayName: 'Copy agent config scripts'
+    inputs:
+      SourcePath: Tests/Scrips
+
+      azureSubscription: 'Visual Studio Ultimate with MSDN (2d0abf9b-717a-4ade-83ef-ddffa31b578b)'
+
+      Destination: AzureVMs
+
+      storage: kaadhinastorage
+
+      resourceGroup: '$(resourcegroupname)'
+
+      vmsAdminUserName: '$(adminUsername)'
+
+      vmsAdminPassword: '$(adminPwd)'
+
+      TargetPath: 'C:\scripts'
+
+      CleanTargetBeforeCopy: true
+
+
+  - task: AzureFileCopy@3
+    displayName: 'Copy test binaries'
+    inputs:
+      SourcePath: '$(Build.SourcesDirectory)'
+
+      azureSubscription: 'Visual Studio Ultimate with MSDN (2d0abf9b-717a-4ade-83ef-ddffa31b578b)'
+
+      Destination: AzureVMs
+
+      storage: kaadhinastorage
+
+      resourceGroup: '$(resourcegroupname)'
+
+      vmsAdminUserName: '$(adminUsername)'
+
+      vmsAdminPassword: '$(adminPwd)'
+
+      TargetPath: 'C:\testbinaries'
+
+      CleanTargetBeforeCopy: true
+
+
+  - task: PowerShellOnTargetMachines@2
+    displayName: 'Configure agents'
+    inputs:
+      EnvironmentName: '$(testvms)'
+
+      AdminUserName: '$(adminUsername)'
+
+      AdminPassword: '$(adminPwd)'
+
+      Protocol: Https
+
+      ScriptPath: 'C:\scripts\InstallVstsAgent.ps1'
+
+      ScriptArguments: '-VSTSAccount kavipriyaa -PersonalAccessToken $(pat) -AgentName $(agentNamePrefix) -PoolName testpool -AgentCount $(agentCount) -AdminUser kavipriya.a@outlook.com'
+
+
+
+#Multi-configuration and multi-agent job options are not exported to YAML. Configure these options using documentation guidance: https://docs.microsoft.com/vsts/pipelines/process/phases
+
+- phase: Phase_2
+  displayName: Run tests
+
+  dependsOn: Phase_1
+  condition: succeeded()
+  queue:
+    name: testpool
+  steps:
+  - task: VisualStudioTestPlatformInstaller@1
+    displayName: 'Visual Studio Test Platform Installer'
+
+
+  - task: VSTest@2
+    displayName: 'Run tests using VSTest'
+    inputs:
+      searchFolder: 'C:\testbinaries'
+
+      vsTestVersion: toolsInstaller
+
+      batchingBasedOnAgentsOption: customBatchSize
+
+      customBatchSizeValue: 3
+
+
+
+- phase: Phase_3
+  displayName: Delete machines
+
+  dependsOn: Phase_2
+  condition: succeededOrFailed()
+  queue:
+    name: Hosted VS2017
+#Your build pipeline references an undefined variable named ‘testvms’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab. See https://go.microsoft.com/fwlink/?linkid=865972
+#Your build pipeline references a secret variable named ‘adminPwd’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it secret. See https://go.microsoft.com/fwlink/?linkid=865972
+#Your build pipeline references a secret variable named ‘pat’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it secret. See https://go.microsoft.com/fwlink/?linkid=865972
+  variables:
+    resourcegroupname: 'sampleresourcegroup'
+  steps:
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Get resource group machine details'
+    inputs:
+      azureSubscription: 'Visual Studio Ultimate with MSDN (2d0abf9b-717a-4ade-83ef-ddffa31b578b)'
+
+      action: 'Select Resource Group'
+
+      resourceGroupName: '$(resourcegroupname)'
+
+      templateLocation: 'URL of the file'
+
+      csmFileLink: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/101-vm-simple-windows/azuredeploy.json'
+
+      csmParametersFileLink: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/101-vm-simple-windows/azuredeploy.parameters.json'
+
+      overrideParameters: '-adminUsername testuser -adminPassword Testpassword1234 -dnsLabelPrefix testsampleprefix123'
+
+      enableDeploymentPrerequisites: ConfigureVMwithWinRM
+
+      outputVariable: testvms
+
+
+  - task: PowerShellOnTargetMachines@2
+    displayName: 'Unconfigure agents'
+    inputs:
+      EnvironmentName: '$(testvms)'
+
+      AdminUserName: '$(adminUsername)'
+
+      AdminPassword: '$(adminPwd)'
+
+      Protocol: Https
+
+      ScriptPath: 'C:\scripts\UnconfigureVstsAgent.ps1'
+
+      ScriptArguments: '-PersonalAccessToken $(pat) -AgentName $(agentNamePrefix) -AgentCount $(agentCount)'
+
+
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Delete resource group'
+    inputs:
+      azureSubscription: 'Visual Studio Ultimate with MSDN (2d0abf9b-717a-4ade-83ef-ddffa31b578b)'
+
+      action: DeleteRG
+
+      resourceGroupName: '$(resourcegroupname)'
+
+
