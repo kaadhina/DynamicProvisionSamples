@@ -1,5 +1,10 @@
 resources:
 - repo: self
+variables:
+  resourcegroupname: 'sampleresourcegroup'
+  adminUsername: 'testuser'
+  agentCount: '4'
+  agentNamePrefix: 'agent'
 phases:
 - phase: Phase_1
   displayName: Provision machines and copy binaries
@@ -8,19 +13,13 @@ phases:
   queue:
     name: Hosted VS2017
     demands: 
-   - msbuild
-   - visualstudio
-   - azureps
+    - msbuild
+    - visualstudio
+    - azureps
 
 #Your build pipeline references a secret variable named ‘adminPwd’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it secret. See https://go.microsoft.com/fwlink/?linkid=865972
-#Your build pipeline references a secret variable named ‘adminPwd’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it secret. See https://go.microsoft.com/fwlink/?linkid=865972
-#Your build pipeline references a secret variable named ‘adminPwd’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it secret. See https://go.microsoft.com/fwlink/?linkid=865972
-#Your build pipeline references an undefined variable named ‘testvms’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab. See https://go.microsoft.com/fwlink/?linkid=865972
-#Your build pipeline references a secret variable named ‘adminPwd’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it secret. See https://go.microsoft.com/fwlink/?linkid=865972
 #Your build pipeline references a secret variable named ‘pat’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it secret. See https://go.microsoft.com/fwlink/?linkid=865972
-  variables:
-    resourcegroupname: 'sampleresourcegroup'
-    adminUsername: 'testuser'
+
   steps:
   - task: AzureResourceGroupDeployment@2
     displayName: 'Create machines'
@@ -112,9 +111,6 @@ phases:
       ScriptArguments: '-VSTSAccount kavipriyaa -PersonalAccessToken $(pat) -AgentName $(agentNamePrefix) -PoolName testpool -AgentCount $(agentCount) -AdminUser kavipriya.a@outlook.com'
 
 
-
-#Multi-configuration and multi-agent job options are not exported to YAML. Configure these options using documentation guidance: https://docs.microsoft.com/vsts/pipelines/process/phases
-
 - phase: Phase_2
   displayName: Run tests
 
@@ -122,6 +118,9 @@ phases:
   condition: succeeded()
   queue:
     name: testpool
+  strategy:
+    parallel: 4
+    maxParallel: 4
   steps:
   - task: VisualStudioTestPlatformInstaller@1
     displayName: 'Visual Studio Test Platform Installer'
@@ -147,11 +146,7 @@ phases:
   condition: succeededOrFailed()
   queue:
     name: Hosted VS2017
-#Your build pipeline references an undefined variable named ‘testvms’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab. See https://go.microsoft.com/fwlink/?linkid=865972
-#Your build pipeline references a secret variable named ‘adminPwd’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it secret. See https://go.microsoft.com/fwlink/?linkid=865972
-#Your build pipeline references a secret variable named ‘pat’. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it secret. See https://go.microsoft.com/fwlink/?linkid=865972
-  variables:
-    resourcegroupname: 'sampleresourcegroup'
+
   steps:
   - task: AzureResourceGroupDeployment@2
     displayName: 'Get resource group machine details'
@@ -161,14 +156,6 @@ phases:
       action: 'Select Resource Group'
 
       resourceGroupName: '$(resourcegroupname)'
-
-      templateLocation: 'URL of the file'
-
-      csmFileLink: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/101-vm-simple-windows/azuredeploy.json'
-
-      csmParametersFileLink: 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/101-vm-simple-windows/azuredeploy.parameters.json'
-
-      overrideParameters: '-adminUsername testuser -adminPassword Testpassword1234 -dnsLabelPrefix testsampleprefix123'
 
       enableDeploymentPrerequisites: ConfigureVMwithWinRM
 
