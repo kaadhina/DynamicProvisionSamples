@@ -1,6 +1,7 @@
 resources:
 - repo: self
 variables:
+  resourcegroupname: 'sampleresourcegroup'
   adminUsername: 'testuser'
   agentCount: '4'
   agentNamePrefix: 'agent'
@@ -37,6 +38,8 @@ jobs:
 
 
       enableDeploymentPrerequisites: ConfigureVMwithWinRM
+      
+      overrideParameters: '-adminUsername $(adminUsername) -adminPassword $(adminPwd) -dnsLabelPrefix testsampleprefix'
 
       outputVariable: testvms
 
