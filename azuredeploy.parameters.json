@@ -7,6 +7,24 @@
         },
         "adminPassword": {
             "value": "GEN-PASSWORD"
+        },
+		"VSTSAccount": {
+            "value": ""
+        },
+		"PersonalAccessToken": {
+            "value": ""
+        },
+		"AgentName": {
+            "value": ""
+        },
+		"PoolName": {
+            "value": ""
+        },
+		"AgentCount": {
+            "value": ""
+        },
+		"AgentAdminUser": {
+            "value": ""
         }
    }
 }
