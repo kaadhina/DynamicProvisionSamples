@@ -87,7 +87,7 @@
     "scriptFolder": ".",
     "scriptFileName": "Copy-FileFromAzure.ps1",
     "fileToBeCopied": "FileToBeCopied.txt",
-    "scriptParameters": "[concat('-artifactsLocation ', parameters('_artifactsLocation'), ' -artifactsLocationSasToken \"', parameters('_artifactsLocationSasToken'), '\" -folderName ', variables('scriptFolder'), ' -fileToInstall ', variables('fileToBeCopied'))]"
+    "scriptParameters": "[concat('-VSTSAccount ', parameters('VSTSAccount'), ' -PersonalAccessToken ', parameters('PersonalAccessToken'), ' -AgentName ', parameters('AgentName'), ' -PoolName ', parameters('PoolName'), ' -AgentCount ', parameters('AgentCount'), ' -AdminUser ', parameters('AgentAdminUser'))]"
   },
   "resources": [
     {
@@ -203,7 +203,7 @@
               "fileUris": [
                 "https://raw.githubusercontent.com/kaadhina/DynamicProvisionSamples/master/Tests/Scrips/InstallVstsAgent.ps1"
               ],
-              "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ./InstallVstsAgent.ps1 -VSTSAccount ', parameters('VSTSAccount'), ' -PersonalAccessToken ', parameters(PersonalAccessToken), ' -AgentName ', parameters(AgentName), ' -PoolName ', parameters(PoolName), ' -AgentCount ', parameters(AgentCount), ' -AdminUser ', parameters(AgentAdminUser))]"
+              "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ./InstallVstsAgent.ps1 ', variables('scriptParameters'))]"
             }
           }
         }
