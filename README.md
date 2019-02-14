@@ -1,6 +1,6 @@
 # DynamicProvisionSamples
 
-Since Run functional test and Deploy Visual Studio test agent tasks in Azure Devops are getting deprecated, we wrote a sample using the new Visual Stusio test task to run test in parallel dynamically provisioned agents.
+Since Run functional test and Deploy Visual Studio test agent tasks in Azure Devops are getting deprecated, we wrote a sample using the new Visual Stusio test task to run tests in parallel on dynamically provisioned agents.
 
 The sample definition essentially does the following:
 + Creates VMs on Azure.
